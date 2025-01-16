@@ -20,16 +20,19 @@ import numpy as np
 
 ## Load and preprocess the audio
 data_dir = Path("audio_data", "donald_trump")
-wav_fpaths = list(data_dir.glob("**/*.mp3"))
-wavs = [preprocess_wav(wav_fpath) for wav_fpath in \
-        tqdm(wav_fpaths, "Preprocessing wavs", len(wav_fpaths), unit=" utterances")]
+mp3_fpaths = list(data_dir.glob("**/*.mp3"))
+wav_fpaths = list(data_dir.glob("**/*.wav"))
+all_fpaths = mp3_fpaths + wav_fpaths
+
+wavs = [preprocess_wav(fpath) for fpath in \
+        tqdm(all_fpaths, "Preprocessing audio", len(all_fpaths), unit=" utterances")]
 
 
 ## Compute the embeddings
 encoder = VoiceEncoder()
 embeds = np.array([encoder.embed_utterance(wav) for wav in wavs])
-speakers = np.array([fpath.parent.name for fpath in wav_fpaths])
-names = np.array([fpath.stem for fpath in wav_fpaths])
+speakers = np.array([fpath.parent.name for fpath in all_fpaths])
+names = np.array([fpath.stem for fpath in all_fpaths])
 
 
 # Take 6 real embeddings at random, and leave the 6 others for testing
@@ -53,7 +56,7 @@ scores, names, speakers = scores[sort], names[sort], speakers[sort]
 ## Plot the scores
 fig, _ = plt.subplots(figsize=(6, 6))
 indices = np.arange(len(scores))
-plt.axhline(0.84, ls="dashed", label="Prediction threshold", c="black")
+plt.axhline(0.8, ls="dashed", label="Prediction threshold", c="black")
 plt.bar(indices[speakers == "real"], scores[speakers == "real"], color="green", label="Real")
 plt.bar(indices[speakers == "fake"], scores[speakers == "fake"], color="red", label="Fake")
 plt.legend()
